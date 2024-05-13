@@ -6,7 +6,7 @@ namespace Tanger_API.Models
     public class Resource
     {
         [Key]
-        public string Id { get; set; }
+        public int Id { get; set; }
         [Required]
         public City City { get; set; }
         [Required]

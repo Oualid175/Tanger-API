@@ -5,6 +5,8 @@ namespace Tanger_API.Models
 {
     public class Solution
     {
+        [Key]
+        public int Id { get; set; }
         [Required]
         public City City { get; set; }
         [Required]

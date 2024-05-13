@@ -4,6 +4,7 @@ namespace Tanger_API.Models
 {
     public class Food
     {
+        [Key]
         public int Id { get; set; }
         [Required]
         public string Name { get; set; } = "";
