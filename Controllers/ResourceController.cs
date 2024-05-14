@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Tanger_API.Models;
 
 namespace Tanger_API.Controllers
 {
-
-    public class ResourceController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ResourceController : ControllerBase
     {
         private readonly Tanger_APIDbContext _context;
 
@@ -19,135 +20,83 @@ namespace Tanger_API.Controllers
             _context = context;
         }
 
-        // GET: Resource
-        public async Task<IActionResult> Index()
+        // GET: api/Resource
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Resource>>> GetResources()
         {
-            return View(await _context.Resources.ToListAsync());
+            return await _context.Resources.ToListAsync();
         }
 
-        // GET: Resource/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: api/Resource/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Resource>> GetResource(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var resource = await _context.Resources
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (resource == null)
-            {
-                return NotFound();
-            }
-
-            return View(resource);
-        }
-
-        // GET: Resource/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Resource/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id")] Resource resource)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(resource);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(resource);
-        }
-
-        // GET: Resource/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-
             var resource = await _context.Resources.FindAsync(id);
+
             if (resource == null)
             {
                 return NotFound();
             }
-            return View(resource);
+
+            return resource;
         }
 
-        // POST: Resource/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id")] Resource resource)
+        // PUT: api/Resource/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutResource(int id, Resource resource)
         {
             if (id != resource.Id)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            _context.Entry(resource).State = EntityState.Modified;
+
+            try
             {
-                try
-                {
-                    _context.Update(resource);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ResourceExists(resource.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
             }
-            return View(resource);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ResourceExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
-        // GET: Resource/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // POST: api/Resource
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<Resource>> PostResource(Resource resource)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            _context.Resources.Add(resource);
+            await _context.SaveChangesAsync();
 
-            var resource = await _context.Resources
-                .FirstOrDefaultAsync(m => m.Id == id);
+            return CreatedAtAction("GetResource", new { id = resource.Id }, resource);
+        }
+
+        // DELETE: api/Resource/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteResource(int id)
+        {
+            var resource = await _context.Resources.FindAsync(id);
             if (resource == null)
             {
                 return NotFound();
             }
 
-            return View(resource);
-        }
-
-        // POST: Resource/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var resource = await _context.Resources.FindAsync(id);
-            if (resource != null)
-            {
-                _context.Resources.Remove(resource);
-            }
-
+            _context.Resources.Remove(resource);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return NoContent();
         }
 
         private bool ResourceExists(int id)

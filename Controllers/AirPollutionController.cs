@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Tanger_API.Models;
 
 namespace Tanger_API.Controllers
 {
-
-    public class AirPollutionController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class AirPollutionController : ControllerBase
     {
         private readonly Tanger_APIDbContext _context;
 
@@ -19,135 +20,83 @@ namespace Tanger_API.Controllers
             _context = context;
         }
 
-        // GET: AirPollution
-        public async Task<IActionResult> Index()
+        // GET: api/AirPollution
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<AirPollution>>> GetAirPollutions()
         {
-            return View(await _context.AirPollutions.ToListAsync());
+            return await _context.AirPollutions.ToListAsync();
         }
 
-        // GET: AirPollution/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: api/AirPollution/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<AirPollution>> GetAirPollution(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var airPollution = await _context.AirPollutions
-                .FirstOrDefaultAsync(m => m.AirPollutionId == id);
-            if (airPollution == null)
-            {
-                return NotFound();
-            }
-
-            return View(airPollution);
-        }
-
-        // GET: AirPollution/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: AirPollution/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AirPollutionId,LocationId,Pollutant,PollutantLevel,Timestamp")] AirPollution airPollution)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(airPollution);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(airPollution);
-        }
-
-        // GET: AirPollution/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-
             var airPollution = await _context.AirPollutions.FindAsync(id);
+
             if (airPollution == null)
             {
                 return NotFound();
             }
-            return View(airPollution);
+
+            return airPollution;
         }
 
-        // POST: AirPollution/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("AirPollutionId,LocationId,Pollutant,PollutantLevel,Timestamp")] AirPollution airPollution)
+        // PUT: api/AirPollution/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutAirPollution(int id, AirPollution airPollution)
         {
             if (id != airPollution.AirPollutionId)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            _context.Entry(airPollution).State = EntityState.Modified;
+
+            try
             {
-                try
-                {
-                    _context.Update(airPollution);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!AirPollutionExists(airPollution.AirPollutionId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
             }
-            return View(airPollution);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!AirPollutionExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
-        // GET: AirPollution/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // POST: api/AirPollution
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<AirPollution>> PostAirPollution(AirPollution airPollution)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            _context.AirPollutions.Add(airPollution);
+            await _context.SaveChangesAsync();
 
-            var airPollution = await _context.AirPollutions
-                .FirstOrDefaultAsync(m => m.AirPollutionId == id);
+            return CreatedAtAction("GetAirPollution", new { id = airPollution.AirPollutionId }, airPollution);
+        }
+
+        // DELETE: api/AirPollution/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAirPollution(int id)
+        {
+            var airPollution = await _context.AirPollutions.FindAsync(id);
             if (airPollution == null)
             {
                 return NotFound();
             }
 
-            return View(airPollution);
-        }
-
-        // POST: AirPollution/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var airPollution = await _context.AirPollutions.FindAsync(id);
-            if (airPollution != null)
-            {
-                _context.AirPollutions.Remove(airPollution);
-            }
-
+            _context.AirPollutions.Remove(airPollution);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return NoContent();
         }
 
         private bool AirPollutionExists(int id)

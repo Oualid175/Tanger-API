@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Tanger_API.Models;
 
 namespace Tanger_API.Controllers
 {
-
-    public class SolutionController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class SolutionController : ControllerBase
     {
         private readonly Tanger_APIDbContext _context;
 
@@ -19,135 +20,83 @@ namespace Tanger_API.Controllers
             _context = context;
         }
 
-        // GET: Solution
-        public async Task<IActionResult> Index()
+        // GET: api/Solution
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Solution>>> GetSolutions()
         {
-            return View(await _context.Solutions.ToListAsync());
+            return await _context.Solutions.ToListAsync();
         }
 
-        // GET: Solution/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: api/Solution/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Solution>> GetSolution(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var solution = await _context.Solutions
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (solution == null)
-            {
-                return NotFound();
-            }
-
-            return View(solution);
-        }
-
-        // GET: Solution/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Solution/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id")] Solution solution)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(solution);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(solution);
-        }
-
-        // GET: Solution/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-
             var solution = await _context.Solutions.FindAsync(id);
+
             if (solution == null)
             {
                 return NotFound();
             }
-            return View(solution);
+
+            return solution;
         }
 
-        // POST: Solution/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id")] Solution solution)
+        // PUT: api/Solution/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutSolution(int id, Solution solution)
         {
             if (id != solution.Id)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            _context.Entry(solution).State = EntityState.Modified;
+
+            try
             {
-                try
-                {
-                    _context.Update(solution);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!SolutionExists(solution.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
             }
-            return View(solution);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!SolutionExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
-        // GET: Solution/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // POST: api/Solution
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<Solution>> PostSolution(Solution solution)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            _context.Solutions.Add(solution);
+            await _context.SaveChangesAsync();
 
-            var solution = await _context.Solutions
-                .FirstOrDefaultAsync(m => m.Id == id);
+            return CreatedAtAction("GetSolution", new { id = solution.Id }, solution);
+        }
+
+        // DELETE: api/Solution/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteSolution(int id)
+        {
+            var solution = await _context.Solutions.FindAsync(id);
             if (solution == null)
             {
                 return NotFound();
             }
 
-            return View(solution);
-        }
-
-        // POST: Solution/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var solution = await _context.Solutions.FindAsync(id);
-            if (solution != null)
-            {
-                _context.Solutions.Remove(solution);
-            }
-
+            _context.Solutions.Remove(solution);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return NoContent();
         }
 
         private bool SolutionExists(int id)

@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Tanger_API.Models;
 
 namespace Tanger_API.Controllers
 {
-
-    public class CityController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class CityController : ControllerBase
     {
         private readonly Tanger_APIDbContext _context;
 
@@ -19,135 +20,83 @@ namespace Tanger_API.Controllers
             _context = context;
         }
 
-        // GET: City
-        public async Task<IActionResult> Index()
+        // GET: api/City
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<City>>> GetCities()
         {
-            return View(await _context.Cities.ToListAsync());
+            return await _context.Cities.ToListAsync();
         }
 
-        // GET: City/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: api/City/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<City>> GetCity(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var city = await _context.Cities
-                .FirstOrDefaultAsync(m => m.CityId == id);
-            if (city == null)
-            {
-                return NotFound();
-            }
-
-            return View(city);
-        }
-
-        // GET: City/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: City/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CityId,CityName,Country")] City city)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(city);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(city);
-        }
-
-        // GET: City/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-
             var city = await _context.Cities.FindAsync(id);
+
             if (city == null)
             {
                 return NotFound();
             }
-            return View(city);
+
+            return city;
         }
 
-        // POST: City/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("CityId,CityName,Country")] City city)
+        // PUT: api/City/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutCity(int id, City city)
         {
             if (id != city.CityId)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            _context.Entry(city).State = EntityState.Modified;
+
+            try
             {
-                try
-                {
-                    _context.Update(city);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CityExists(city.CityId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
             }
-            return View(city);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!CityExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
-        // GET: City/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // POST: api/City
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<City>> PostCity(City city)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            _context.Cities.Add(city);
+            await _context.SaveChangesAsync();
 
-            var city = await _context.Cities
-                .FirstOrDefaultAsync(m => m.CityId == id);
+            return CreatedAtAction("GetCity", new { id = city.CityId }, city);
+        }
+
+        // DELETE: api/City/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCity(int id)
+        {
+            var city = await _context.Cities.FindAsync(id);
             if (city == null)
             {
                 return NotFound();
             }
 
-            return View(city);
-        }
-
-        // POST: City/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var city = await _context.Cities.FindAsync(id);
-            if (city != null)
-            {
-                _context.Cities.Remove(city);
-            }
-
+            _context.Cities.Remove(city);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return NoContent();
         }
 
         private bool CityExists(int id)
