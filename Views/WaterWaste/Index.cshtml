@@ -1,0 +1,53 @@
+﻿@model IEnumerable<Tanger_API.Models.WaterWaste>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.LocationId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WasteType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WasteVolume)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Timestamp)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.LocationId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.WasteType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.WasteVolume)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Timestamp)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.WaterWasteId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.WaterWasteId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.WaterWasteId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

@@ -1,85 +1,158 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Tanger_API.Models;
 
 namespace Tanger_API.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+
     public class ResourceController : Controller
     {
-        // GET: ResourceController
-        public ActionResult Index()
+        private readonly Tanger_APIDbContext _context;
+
+        public ResourceController(Tanger_APIDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET: Resource
+        public async Task<IActionResult> Index()
+        {
+            return View(await _context.Resources.ToListAsync());
+        }
+
+        // GET: Resource/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var resource = await _context.Resources
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (resource == null)
+            {
+                return NotFound();
+            }
+
+            return View(resource);
+        }
+
+        // GET: Resource/Create
+        public IActionResult Create()
         {
             return View();
         }
 
-        // GET: ResourceController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: ResourceController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: ResourceController/Create
+        // POST: Resource/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create([Bind("Id")] Resource resource)
         {
-            try
+            if (ModelState.IsValid)
             {
+                _context.Add(resource);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(resource);
         }
 
-        // GET: ResourceController/Edit/5
-        public ActionResult Edit(int id)
+        // GET: Resource/Edit/5
+        public async Task<IActionResult> Edit(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+
+            var resource = await _context.Resources.FindAsync(id);
+            if (resource == null)
+            {
+                return NotFound();
+            }
+            return View(resource);
         }
 
-        // POST: ResourceController/Edit/5
+        // POST: Resource/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Edit(int id, [Bind("Id")] Resource resource)
         {
-            try
+            if (id != resource.Id)
             {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(resource);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ResourceExists(resource.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(resource);
         }
 
-        // GET: ResourceController/Delete/5
-        public ActionResult Delete(int id)
+        // GET: Resource/Delete/5
+        public async Task<IActionResult> Delete(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var resource = await _context.Resources
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (resource == null)
+            {
+                return NotFound();
+            }
+
+            return View(resource);
         }
 
-        // POST: ResourceController/Delete/5
-        [HttpPost]
+        // POST: Resource/Delete/5
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            try
+            var resource = await _context.Resources.FindAsync(id);
+            if (resource != null)
             {
-                return RedirectToAction(nameof(Index));
+                _context.Resources.Remove(resource);
             }
-            catch
-            {
-                return View();
-            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool ResourceExists(int id)
+        {
+            return _context.Resources.Any(e => e.Id == id);
         }
     }
 }

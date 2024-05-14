@@ -1,85 +1,158 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Tanger_API.Models;
 
 namespace Tanger_API.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+
     public class CitizenController : Controller
     {
-        // GET: CitizenController
-        public ActionResult Index()
+        private readonly Tanger_APIDbContext _context;
+
+        public CitizenController(Tanger_APIDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET: Citizen
+        public async Task<IActionResult> Index()
+        {
+            return View(await _context.Citizens.ToListAsync());
+        }
+
+        // GET: Citizen/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var citizen = await _context.Citizens
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (citizen == null)
+            {
+                return NotFound();
+            }
+
+            return View(citizen);
+        }
+
+        // GET: Citizen/Create
+        public IActionResult Create()
         {
             return View();
         }
 
-        // GET: CitizenController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: CitizenController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: CitizenController/Create
+        // POST: Citizen/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,Address,City,Country,PostalCode,DateOfBirth,Gender")] Citizen citizen)
         {
-            try
+            if (ModelState.IsValid)
             {
+                _context.Add(citizen);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(citizen);
         }
 
-        // GET: CitizenController/Edit/5
-        public ActionResult Edit(int id)
+        // GET: Citizen/Edit/5
+        public async Task<IActionResult> Edit(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+
+            var citizen = await _context.Citizens.FindAsync(id);
+            if (citizen == null)
+            {
+                return NotFound();
+            }
+            return View(citizen);
         }
 
-        // POST: CitizenController/Edit/5
+        // POST: Citizen/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,Address,City,Country,PostalCode,DateOfBirth,Gender")] Citizen citizen)
         {
-            try
+            if (id != citizen.Id)
             {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(citizen);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!CitizenExists(citizen.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(citizen);
         }
 
-        // GET: CitizenController/Delete/5
-        public ActionResult Delete(int id)
+        // GET: Citizen/Delete/5
+        public async Task<IActionResult> Delete(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var citizen = await _context.Citizens
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (citizen == null)
+            {
+                return NotFound();
+            }
+
+            return View(citizen);
         }
 
-        // POST: CitizenController/Delete/5
-        [HttpPost]
+        // POST: Citizen/Delete/5
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            try
+            var citizen = await _context.Citizens.FindAsync(id);
+            if (citizen != null)
             {
-                return RedirectToAction(nameof(Index));
+                _context.Citizens.Remove(citizen);
             }
-            catch
-            {
-                return View();
-            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool CitizenExists(int id)
+        {
+            return _context.Citizens.Any(e => e.Id == id);
         }
     }
 }

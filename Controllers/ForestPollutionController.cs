@@ -1,85 +1,158 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Tanger_API.Models;
 
 namespace Tanger_API.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+
     public class ForestPollutionController : Controller
     {
-        // GET: ForestPollutionController
-        public ActionResult Index()
+        private readonly Tanger_APIDbContext _context;
+
+        public ForestPollutionController(Tanger_APIDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET: ForestPollution
+        public async Task<IActionResult> Index()
+        {
+            return View(await _context.ForestPollutions.ToListAsync());
+        }
+
+        // GET: ForestPollution/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var forestPollution = await _context.ForestPollutions
+                .FirstOrDefaultAsync(m => m.ForestPollutionId == id);
+            if (forestPollution == null)
+            {
+                return NotFound();
+            }
+
+            return View(forestPollution);
+        }
+
+        // GET: ForestPollution/Create
+        public IActionResult Create()
         {
             return View();
         }
 
-        // GET: ForestPollutionController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: ForestPollutionController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: ForestPollutionController/Create
+        // POST: ForestPollution/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create([Bind("ForestPollutionId,LocationId,Pollutant,Severity,Timestamp")] ForestPollution forestPollution)
         {
-            try
+            if (ModelState.IsValid)
             {
+                _context.Add(forestPollution);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(forestPollution);
         }
 
-        // GET: ForestPollutionController/Edit/5
-        public ActionResult Edit(int id)
+        // GET: ForestPollution/Edit/5
+        public async Task<IActionResult> Edit(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+
+            var forestPollution = await _context.ForestPollutions.FindAsync(id);
+            if (forestPollution == null)
+            {
+                return NotFound();
+            }
+            return View(forestPollution);
         }
 
-        // POST: ForestPollutionController/Edit/5
+        // POST: ForestPollution/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Edit(int id, [Bind("ForestPollutionId,LocationId,Pollutant,Severity,Timestamp")] ForestPollution forestPollution)
         {
-            try
+            if (id != forestPollution.ForestPollutionId)
             {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(forestPollution);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ForestPollutionExists(forestPollution.ForestPollutionId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(forestPollution);
         }
 
-        // GET: ForestPollutionController/Delete/5
-        public ActionResult Delete(int id)
+        // GET: ForestPollution/Delete/5
+        public async Task<IActionResult> Delete(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var forestPollution = await _context.ForestPollutions
+                .FirstOrDefaultAsync(m => m.ForestPollutionId == id);
+            if (forestPollution == null)
+            {
+                return NotFound();
+            }
+
+            return View(forestPollution);
         }
 
-        // POST: ForestPollutionController/Delete/5
-        [HttpPost]
+        // POST: ForestPollution/Delete/5
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            try
+            var forestPollution = await _context.ForestPollutions.FindAsync(id);
+            if (forestPollution != null)
             {
-                return RedirectToAction(nameof(Index));
+                _context.ForestPollutions.Remove(forestPollution);
             }
-            catch
-            {
-                return View();
-            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool ForestPollutionExists(int id)
+        {
+            return _context.ForestPollutions.Any(e => e.ForestPollutionId == id);
         }
     }
 }

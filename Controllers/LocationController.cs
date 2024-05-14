@@ -1,85 +1,158 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Tanger_API.Models;
 
 namespace Tanger_API.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+
     public class LocationController : Controller
     {
-        // GET: LocationController
-        public ActionResult Index()
+        private readonly Tanger_APIDbContext _context;
+
+        public LocationController(Tanger_APIDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET: Location
+        public async Task<IActionResult> Index()
+        {
+            return View(await _context.Locations.ToListAsync());
+        }
+
+        // GET: Location/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var location = await _context.Locations
+                .FirstOrDefaultAsync(m => m.LocationId == id);
+            if (location == null)
+            {
+                return NotFound();
+            }
+
+            return View(location);
+        }
+
+        // GET: Location/Create
+        public IActionResult Create()
         {
             return View();
         }
 
-        // GET: LocationController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: LocationController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: LocationController/Create
+        // POST: Location/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create([Bind("LocationId,CityId,Latitude,Longitude,Address")] Location location)
         {
-            try
+            if (ModelState.IsValid)
             {
+                _context.Add(location);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(location);
         }
 
-        // GET: LocationController/Edit/5
-        public ActionResult Edit(int id)
+        // GET: Location/Edit/5
+        public async Task<IActionResult> Edit(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+
+            var location = await _context.Locations.FindAsync(id);
+            if (location == null)
+            {
+                return NotFound();
+            }
+            return View(location);
         }
 
-        // POST: LocationController/Edit/5
+        // POST: Location/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Edit(int id, [Bind("LocationId,CityId,Latitude,Longitude,Address")] Location location)
         {
-            try
+            if (id != location.LocationId)
             {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(location);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!LocationExists(location.LocationId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(location);
         }
 
-        // GET: LocationController/Delete/5
-        public ActionResult Delete(int id)
+        // GET: Location/Delete/5
+        public async Task<IActionResult> Delete(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var location = await _context.Locations
+                .FirstOrDefaultAsync(m => m.LocationId == id);
+            if (location == null)
+            {
+                return NotFound();
+            }
+
+            return View(location);
         }
 
-        // POST: LocationController/Delete/5
-        [HttpPost]
+        // POST: Location/Delete/5
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            try
+            var location = await _context.Locations.FindAsync(id);
+            if (location != null)
             {
-                return RedirectToAction(nameof(Index));
+                _context.Locations.Remove(location);
             }
-            catch
-            {
-                return View();
-            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool LocationExists(int id)
+        {
+            return _context.Locations.Any(e => e.LocationId == id);
         }
     }
 }

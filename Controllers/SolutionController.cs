@@ -1,85 +1,158 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Tanger_API.Models;
 
 namespace Tanger_API.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+
     public class SolutionController : Controller
     {
-        // GET: SolutionController
-        public ActionResult Index()
+        private readonly Tanger_APIDbContext _context;
+
+        public SolutionController(Tanger_APIDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET: Solution
+        public async Task<IActionResult> Index()
+        {
+            return View(await _context.Solutions.ToListAsync());
+        }
+
+        // GET: Solution/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var solution = await _context.Solutions
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (solution == null)
+            {
+                return NotFound();
+            }
+
+            return View(solution);
+        }
+
+        // GET: Solution/Create
+        public IActionResult Create()
         {
             return View();
         }
 
-        // GET: SolutionController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: SolutionController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: SolutionController/Create
+        // POST: Solution/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create([Bind("Id")] Solution solution)
         {
-            try
+            if (ModelState.IsValid)
             {
+                _context.Add(solution);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(solution);
         }
 
-        // GET: SolutionController/Edit/5
-        public ActionResult Edit(int id)
+        // GET: Solution/Edit/5
+        public async Task<IActionResult> Edit(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+
+            var solution = await _context.Solutions.FindAsync(id);
+            if (solution == null)
+            {
+                return NotFound();
+            }
+            return View(solution);
         }
 
-        // POST: SolutionController/Edit/5
+        // POST: Solution/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Edit(int id, [Bind("Id")] Solution solution)
         {
-            try
+            if (id != solution.Id)
             {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(solution);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!SolutionExists(solution.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(solution);
         }
 
-        // GET: SolutionController/Delete/5
-        public ActionResult Delete(int id)
+        // GET: Solution/Delete/5
+        public async Task<IActionResult> Delete(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var solution = await _context.Solutions
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (solution == null)
+            {
+                return NotFound();
+            }
+
+            return View(solution);
         }
 
-        // POST: SolutionController/Delete/5
-        [HttpPost]
+        // POST: Solution/Delete/5
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            try
+            var solution = await _context.Solutions.FindAsync(id);
+            if (solution != null)
             {
-                return RedirectToAction(nameof(Index));
+                _context.Solutions.Remove(solution);
             }
-            catch
-            {
-                return View();
-            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool SolutionExists(int id)
+        {
+            return _context.Solutions.Any(e => e.Id == id);
         }
     }
 }

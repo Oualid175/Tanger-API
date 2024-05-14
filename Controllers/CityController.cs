@@ -1,85 +1,158 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Tanger_API.Models;
 
 namespace Tanger_API.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+
     public class CityController : Controller
     {
-        // GET: CityController
-        public ActionResult Index()
+        private readonly Tanger_APIDbContext _context;
+
+        public CityController(Tanger_APIDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET: City
+        public async Task<IActionResult> Index()
+        {
+            return View(await _context.Cities.ToListAsync());
+        }
+
+        // GET: City/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var city = await _context.Cities
+                .FirstOrDefaultAsync(m => m.CityId == id);
+            if (city == null)
+            {
+                return NotFound();
+            }
+
+            return View(city);
+        }
+
+        // GET: City/Create
+        public IActionResult Create()
         {
             return View();
         }
 
-        // GET: CityController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: CityController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: CityController/Create
+        // POST: City/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create([Bind("CityId,CityName,Country")] City city)
         {
-            try
+            if (ModelState.IsValid)
             {
+                _context.Add(city);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(city);
         }
 
-        // GET: CityController/Edit/5
-        public ActionResult Edit(int id)
+        // GET: City/Edit/5
+        public async Task<IActionResult> Edit(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+
+            var city = await _context.Cities.FindAsync(id);
+            if (city == null)
+            {
+                return NotFound();
+            }
+            return View(city);
         }
 
-        // POST: CityController/Edit/5
+        // POST: City/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Edit(int id, [Bind("CityId,CityName,Country")] City city)
         {
-            try
+            if (id != city.CityId)
             {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(city);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!CityExists(city.CityId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(city);
         }
 
-        // GET: CityController/Delete/5
-        public ActionResult Delete(int id)
+        // GET: City/Delete/5
+        public async Task<IActionResult> Delete(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var city = await _context.Cities
+                .FirstOrDefaultAsync(m => m.CityId == id);
+            if (city == null)
+            {
+                return NotFound();
+            }
+
+            return View(city);
         }
 
-        // POST: CityController/Delete/5
-        [HttpPost]
+        // POST: City/Delete/5
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            try
+            var city = await _context.Cities.FindAsync(id);
+            if (city != null)
             {
-                return RedirectToAction(nameof(Index));
+                _context.Cities.Remove(city);
             }
-            catch
-            {
-                return View();
-            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool CityExists(int id)
+        {
+            return _context.Cities.Any(e => e.CityId == id);
         }
     }
 }
